@@ -38,7 +38,64 @@ class User(db.Model, UserMixin):
 #         copies, available_copies, author_id, category_id
 # Relationships: Book → BorrowRecords (one-to-many)
 # =============================================================
+from typing import List, Optional
+from sqlalchemy import String, Text, Integer, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+# 1. Base Class definition
+class Base(DeclarativeBase):
+    pass
+
+# 2. Author Model
+class Author(Base):
+    __tablename__ = "authors"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    biography: Mapped[Optional[str]] = mapped_column(Text)
+
+    # One Author -> Many Books
+    books: Mapped[List["Book"]] = relationship(back_populates="author", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<Author(id={self.id}, name='{self.name}')>"
+
+# 3. Category Model
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+
+    # One Category -> Many Books
+    books: Mapped[List["Book"]] = relationship(back_populates="category")
+
+    def __repr__(self) -> str:
+        return f"<Category(id={self.id}, name='{self.name}')>"
+
+# 4. Book Model
+class Book(Base):
+    __tablename__ = "books"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    isbn: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    published_year: Mapped[Optional[int]] = mapped_column(Integer)
+    copies: Mapped[int] = mapped_column(Integer, default=1)
+    available_copies: Mapped[int] = mapped_column(Integer, default=1)
+
+    # Foreign Keys linking to Author and Category
+    author_id: Mapped[int] = mapped_column(ForeignKey("authors.id"), nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False)
+
+    # Relationships back to Author and Category
+    author: Mapped["Author"] = relationship(back_populates="books")
+    category: Mapped["Category"] = relationship(back_populates="books")
+
+    def __repr__(self) -> str:
+        return f"<Book(id={self.id}, title='{self.title}')>"
 
 # =============================================================
 # NASRA — Borrowing System
