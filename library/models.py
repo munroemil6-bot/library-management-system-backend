@@ -75,9 +75,21 @@ class Book(db.Model):
 
 # =============================================================
 # NASRA — Borrowing System
-# TODO: Create the BorrowRecord model
-# Fields: id, borrow_date, due_date, return_date, status,
-#         user_id, book_id
-# Status values: "borrowed", "returned", "overdue"
-# Relationships: BorrowRecord → User, BorrowRecord → Book
 # =============================================================
+class BorrowRecord(db.Model):
+    __tablename__ = 'borrow_records'
+
+    id = db.Column(db.Integer, primary_key=True)
+    borrow_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    due_date = db.Column(db.DateTime, nullable=False)
+    return_date = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(20), default='borrowed', nullable=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
+
+    user = db.relationship('User', back_populates='borrow_records')
+    book = db.relationship('Book', back_populates='borrow_records')
+
+    def __repr__(self):
+        return f'<BorrowRecord {self.id} user={self.user_id} book={self.book_id} status={self.status}>'

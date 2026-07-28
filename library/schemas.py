@@ -1,5 +1,5 @@
 from .extensions import ma
-from .models import User
+from .models import User, BorrowRecord
 from marshmallow import fields, validate, validates, ValidationError
 
 
@@ -63,8 +63,11 @@ class LoginSchema(ma.Schema):
 
 # =============================================================
 # NASRA — Borrowing System
-# TODO: Create BorrowSchema
-#   - Fields: id, borrow_date, due_date, return_date,
-#             status, user_id, book_id
-#   - Nested: user (dump only), book (dump only)
 # =============================================================
+class BorrowSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = BorrowRecord
+        dump_only = ("id", "borrow_date", "status")
+
+    user = fields.Nested(UserSchema, dump_only=True)
+    book = fields.Nested("BookSchema", dump_only=True)
