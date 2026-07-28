@@ -1,5 +1,5 @@
 from .extensions import ma
-from .models import User
+from .models import User, BorrowRecord
 from marshmallow import fields, validate, validates, ValidationError
 
 
@@ -31,7 +31,8 @@ class RegisterSchema(ma.Schema):
         if User.query.filter_by(email=value).first():
             raise ValidationError("Email already registered.")
 
-    def validate(self, data, **kwargs):
+    @validates_schema
+    def validate_passwords(self, data, **kwargs):
         data = super().load(data, **kwargs)
         if data.get("password") != data.get("password_confirmation"):
             raise ValidationError({"password_confirmation": ["Passwords do not match."]})
@@ -104,8 +105,11 @@ class BookSchema(SQLAlchemyAutoSchema):
 
 # =============================================================
 # NASRA — Borrowing System
-# TODO: Create BorrowSchema
-#   - Fields: id, borrow_date, due_date, return_date,
-#             status, user_id, book_id
-#   - Nested: user (dump only), book (dump only)
 # =============================================================
+class BorrowSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = BorrowRecord
+        dump_only = ("id", "borrow_date", "status")
+
+    user = fields.Nested(UserSchema, dump_only=True)
+    book = fields.Nested("BookSchema", dump_only=True)
