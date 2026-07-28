@@ -23,21 +23,7 @@ class User(db.Model, UserMixin):
         return f"<User {self.username}>"
 
 
-# =============================================================
-# NAOMI — Library Management
-# TODO: Create the Author model
-# Fields: id, name, biography
-# Relationships: Author → Books (one-to-many)
-#
-# TODO: Create the Category model
-# Fields: id, name, description
-# Relationships: Category → Books (one-to-many)
-#
-# TODO: Create the Book model
-# Fields: id, title, isbn, description, published_year,
-#         copies, available_copies, author_id, category_id
-# Relationships: Book → BorrowRecords (one-to-many)
-# =============================================================
+
 from typing import List, Optional
 from sqlalchemy import String, Text, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
