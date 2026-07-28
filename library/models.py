@@ -5,11 +5,22 @@ from datetime import datetime
 
 # =============================================================
 # MASON — Authentication & Users
-# TODO: Create the User model
-# Fields: id, username, email, password_hash, role, created_at
-# Relationships: User → BorrowRecord (one-to-many)
-# Notes: role should support "admin" and "member"
 # =============================================================
+
+class User(db.Model, UserMixin):
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="member")  # "admin" or "member"
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    borrow_records = db.relationship("BorrowRecord", back_populates="user", lazy=True)
+
+    def __repr__(self):
+        return f"<User {self.username}>"
 
 
 # =============================================================
