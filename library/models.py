@@ -3,10 +3,7 @@ from flask_login import UserMixin
 from datetime import datetime
 
 
-# =============================================================
 # MASON — Authentication & Users
-# =============================================================
-
 class User(db.Model, UserMixin):
     __tablename__ = "users"
 
@@ -23,10 +20,8 @@ class User(db.Model, UserMixin):
         return f"<User {self.username}>"
 
 
-# =============================================================
-# NAOMI — Library Management
-# =============================================================
 
+# NAOMI — Library Management
 class Author(db.Model):
     __tablename__ = "authors"
 
@@ -60,22 +55,21 @@ class Book(db.Model):
     title = db.Column(db.String(200), nullable=False)
     isbn = db.Column(db.String(20), unique=True, nullable=False)
     description = db.Column(db.Text)
-    published_year = db.Column(db.Integer)
-    copies = db.Column(db.Integer, default=1)
-    available_copies = db.Column(db.Integer, default=1)
+    published_year = db.Column(db.Integer, nullable=True)
+    copies = db.Column(db.Integer, default=1, nullable=False)
+    available_copies = db.Column(db.Integer, default=1, nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("authors.id"), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
 
     author = db.relationship("Author", back_populates="books")
     category = db.relationship("Category", back_populates="books")
+    borrow_records = db.relationship("BorrowRecord", back_populates="book", lazy=True)
 
     def __repr__(self):
         return f"<Book {self.title}>"
 
 
-# =============================================================
 # NASRA — Borrowing System
-# =============================================================
 class BorrowRecord(db.Model):
     __tablename__ = 'borrow_records'
 

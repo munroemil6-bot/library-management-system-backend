@@ -31,7 +31,8 @@ class RegisterSchema(ma.Schema):
         if User.query.filter_by(email=value).first():
             raise ValidationError("Email already registered.")
 
-    def validate(self, data, **kwargs):
+    @validates_schema
+    def validate_passwords(self, data, **kwargs):
         data = super().load(data, **kwargs)
         if data.get("password") != data.get("password_confirmation"):
             raise ValidationError({"password_confirmation": ["Passwords do not match."]})
