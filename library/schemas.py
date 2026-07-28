@@ -1,26 +1,50 @@
 from .extensions import ma
+from .models import User
 from marshmallow import fields, validate, validates, ValidationError
 
 
 # =============================================================
-# MEMBER 1 — Authentication & Users
-# TODO: Create UserSchema
-#   - Dump only: id, username, email, role, created_at
-#   - Load only: password (write-only)
-#
-# TODO: Create RegisterSchema
-#   - Validate: username (required, unique)
-#   - Validate: email (required, valid format, unique)
-#   - Validate: password (required, min 8 chars)
-#   - Validate: password_confirmation (must match password)
-#
-# TODO: Create LoginSchema
-#   - Fields: email, password
+# MASON — Authentication & Users
 # =============================================================
+
+class UserSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+        dump_only = ("id", "username", "email", "role", "created_at")
+
+    password = fields.String(load_only=True)
+
+
+class RegisterSchema(ma.Schema):
+    username = fields.String(required=True, validate=validate.Length(min=1))
+    email = fields.Email(required=True)
+    password = fields.String(required=True, validate=validate.Length(min=8), load_only=True)
+    password_confirmation = fields.String(required=True, load_only=True)
+
+    @validates("username")
+    def validate_username_unique(self, value):
+        if User.query.filter_by(username=value).first():
+            raise ValidationError("Username already taken.")
+
+    @validates("email")
+    def validate_email_unique(self, value):
+        if User.query.filter_by(email=value).first():
+            raise ValidationError("Email already registered.")
+
+    def validate(self, data, **kwargs):
+        data = super().load(data, **kwargs)
+        if data.get("password") != data.get("password_confirmation"):
+            raise ValidationError({"password_confirmation": ["Passwords do not match."]})
+        return data
+
+
+class LoginSchema(ma.Schema):
+    email = fields.Email(required=True)
+    password = fields.String(required=True, load_only=True)
 
 
 # =============================================================
-# MEMBER 2 — Library Management
+# NAOMI — Library Management
 # TODO: Create AuthorSchema
 #   - Fields: id, name, biography
 #   - Nested: books (many, dump only)
@@ -79,7 +103,7 @@ class BookSchema(SQLAlchemyAutoSchema):
     category = fields.Nested(CategorySchema, only=("id", "name"), dump_only=True)
 
 # =============================================================
-# MEMBER 3 — Borrowing System
+# NASRA — Borrowing System
 # TODO: Create BorrowSchema
 #   - Fields: id, borrow_date, due_date, return_date,
 #             status, user_id, book_id
