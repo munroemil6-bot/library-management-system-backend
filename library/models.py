@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 # =============================================================
-# MEMBER 1 — Authentication & Users
+# MASON — Authentication & Users
 # TODO: Create the User model
 # Fields: id, username, email, password_hash, role, created_at
 # Relationships: User → BorrowRecord (one-to-many)
@@ -13,7 +13,7 @@ from datetime import datetime
 
 
 # =============================================================
-# MEMBER 2 — Library Management
+# NAOMI — Library Management
 # TODO: Create the Author model
 # Fields: id, name, biography
 # Relationships: Author → Books (one-to-many)
@@ -30,7 +30,7 @@ from datetime import datetime
 
 
 # =============================================================
-# MEMBER 3 — Borrowing System
+# NASRA — Borrowing System
 # TODO: Create the BorrowRecord model
 # Fields: id, borrow_date, due_date, return_date, status,
 #         user_id, book_id

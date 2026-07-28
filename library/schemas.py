@@ -3,7 +3,7 @@ from marshmallow import fields, validate, validates, ValidationError
 
 
 # =============================================================
-# MEMBER 1 — Authentication & Users
+# MASON — Authentication & Users
 # TODO: Create UserSchema
 #   - Dump only: id, username, email, role, created_at
 #   - Load only: password (write-only)
@@ -20,7 +20,7 @@ from marshmallow import fields, validate, validates, ValidationError
 
 
 # =============================================================
-# MEMBER 2 — Library Management
+# NAOMI — Library Management
 # TODO: Create AuthorSchema
 #   - Fields: id, name, biography
 #   - Nested: books (many, dump only)
@@ -38,7 +38,7 @@ from marshmallow import fields, validate, validates, ValidationError
 
 
 # =============================================================
-# MEMBER 3 — Borrowing System
+# NASRA — Borrowing System
 # TODO: Create BorrowSchema
 #   - Fields: id, borrow_date, due_date, return_date,
 #             status, user_id, book_id

@@ -4,7 +4,7 @@ from . import app
 
 
 # =============================================================
-# MEMBER 1 — Authentication & Users
+# MASON — Authentication & Users
 # =============================================================
 
 # TODO: POST /register
@@ -49,7 +49,7 @@ from . import app
 
 
 # =============================================================
-# MEMBER 2 — Library Management
+# NAOMI — Library Management
 # =============================================================
 
 # TODO: GET /books
@@ -128,7 +128,7 @@ from . import app
 
 
 # =============================================================
-# MEMBER 3 — Borrowing System
+# NASRA — Borrowing System
 # =============================================================
 
 # TODO: GET /borrow  (admin sees all, member sees own)
