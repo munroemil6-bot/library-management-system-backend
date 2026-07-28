@@ -1,58 +1,156 @@
-from flask import Blueprint
-from flask_login import login_required
+from flask import request, jsonify
+from flask_login import login_required, current_user
+from . import app
 
 
 # =============================================================
 # MEMBER 1 — Authentication & Users
-# Blueprint prefix: /auth and /users
 # =============================================================
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-users_bp = Blueprint("users", __name__, url_prefix="/users")
+# TODO: POST /register
+# @app.route("/register", methods=["POST"])
+# def register():
+#     pass
 
-# TODO: POST   /auth/register
-# TODO: POST   /auth/login
-# TODO: POST   /auth/logout
-# TODO: GET    /users
-# TODO: GET    /users/<int:id>
-# TODO: PATCH  /users/<int:id>
-# TODO: DELETE /users/<int:id>
+# TODO: POST /login
+# @app.route("/login", methods=["POST"])
+# def login():
+#     pass
+
+# TODO: POST /logout
+# @app.route("/logout", methods=["POST"])
+# @login_required
+# def logout():
+#     pass
+
+# TODO: GET /users
+# @app.route("/users", methods=["GET"])
+# @login_required
+# def get_users():
+#     pass
+
+# TODO: GET /users/<id>
+# @app.route("/users/<int:id>", methods=["GET"])
+# @login_required
+# def get_user(id):
+#     pass
+
+# TODO: PATCH /users/<id>
+# @app.route("/users/<int:id>", methods=["PATCH"])
+# @login_required
+# def update_user(id):
+#     pass
+
+# TODO: DELETE /users/<id>
+# @app.route("/users/<int:id>", methods=["DELETE"])
+# @login_required
+# def delete_user(id):
+#     pass
 
 
 # =============================================================
 # MEMBER 2 — Library Management
-# Blueprint prefix: /books, /authors, /categories
 # =============================================================
 
-books_bp = Blueprint("books", __name__, url_prefix="/books")
-authors_bp = Blueprint("authors", __name__, url_prefix="/authors")
-categories_bp = Blueprint("categories", __name__, url_prefix="/categories")
+# TODO: GET /books
+# @app.route("/books", methods=["GET"])
+# def get_books():
+#     pass
 
-# TODO: GET    /books
-# TODO: GET    /books/<int:id>
-# TODO: POST   /books           (admin only)
-# TODO: PATCH  /books/<int:id>  (admin only)
-# TODO: DELETE /books/<int:id>  (admin only)
+# TODO: GET /books/<id>
+# @app.route("/books/<int:id>", methods=["GET"])
+# def get_book(id):
+#     pass
 
-# TODO: GET    /authors
-# TODO: POST   /authors         (admin only)
-# TODO: PATCH  /authors/<int:id>(admin only)
-# TODO: DELETE /authors/<int:id>(admin only)
+# TODO: POST /books  (admin only)
+# @app.route("/books", methods=["POST"])
+# @login_required
+# def create_book():
+#     pass
 
-# TODO: GET    /categories
-# TODO: POST   /categories         (admin only)
-# TODO: PATCH  /categories/<int:id>(admin only)
-# TODO: DELETE /categories/<int:id>(admin only)
+# TODO: PATCH /books/<id>  (admin only)
+# @app.route("/books/<int:id>", methods=["PATCH"])
+# @login_required
+# def update_book(id):
+#     pass
+
+# TODO: DELETE /books/<id>  (admin only)
+# @app.route("/books/<int:id>", methods=["DELETE"])
+# @login_required
+# def delete_book(id):
+#     pass
+
+# TODO: GET /authors
+# @app.route("/authors", methods=["GET"])
+# def get_authors():
+#     pass
+
+# TODO: POST /authors  (admin only)
+# @app.route("/authors", methods=["POST"])
+# @login_required
+# def create_author():
+#     pass
+
+# TODO: PATCH /authors/<id>  (admin only)
+# @app.route("/authors/<int:id>", methods=["PATCH"])
+# @login_required
+# def update_author(id):
+#     pass
+
+# TODO: DELETE /authors/<id>  (admin only)
+# @app.route("/authors/<int:id>", methods=["DELETE"])
+# @login_required
+# def delete_author(id):
+#     pass
+
+# TODO: GET /categories
+# @app.route("/categories", methods=["GET"])
+# def get_categories():
+#     pass
+
+# TODO: POST /categories  (admin only)
+# @app.route("/categories", methods=["POST"])
+# @login_required
+# def create_category():
+#     pass
+
+# TODO: PATCH /categories/<id>  (admin only)
+# @app.route("/categories/<int:id>", methods=["PATCH"])
+# @login_required
+# def update_category(id):
+#     pass
+
+# TODO: DELETE /categories/<id>  (admin only)
+# @app.route("/categories/<int:id>", methods=["DELETE"])
+# @login_required
+# def delete_category(id):
+#     pass
 
 
 # =============================================================
 # MEMBER 3 — Borrowing System
-# Blueprint prefix: /borrow
 # =============================================================
 
-borrow_bp = Blueprint("borrow", __name__, url_prefix="/borrow")
+# TODO: GET /borrow  (admin sees all, member sees own)
+# @app.route("/borrow", methods=["GET"])
+# @login_required
+# def get_borrow_records():
+#     pass
 
-# TODO: GET    /borrow              (admin sees all, member sees own)
-# TODO: POST   /borrow              (member borrows a book)
-# TODO: PATCH  /borrow/<int:id>     (mark returned)
-# TODO: DELETE /borrow/<int:id>     (admin only)
+# TODO: POST /borrow  (member borrows a book)
+# @app.route("/borrow", methods=["POST"])
+# @login_required
+# def borrow_book():
+#     pass
+
+# TODO: PATCH /borrow/<id>  (mark returned)
+# @app.route("/borrow/<int:id>", methods=["PATCH"])
+# @login_required
+# def return_book(id):
+#     pass
+
+# TODO: DELETE /borrow/<id>  (admin only)
+# @app.route("/borrow/<int:id>", methods=["DELETE"])
+# @login_required
+# def delete_borrow_record(id):
+#     pass
