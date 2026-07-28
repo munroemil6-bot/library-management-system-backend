@@ -20,8 +20,7 @@ class User(db.Model, UserMixin):
         return f"<User {self.username}>"
 
 
-
-# NAOMI — Library Management
+# Naomi — Library Management
 class Author(db.Model):
     __tablename__ = "authors"
 
