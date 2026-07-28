@@ -1,4 +1,4 @@
-# 📚 BookBarn Backend
+# BookBarn Backend
 
 ## Overview
 
