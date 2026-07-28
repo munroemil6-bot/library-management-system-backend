@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Flask
+instance/
+*.db
+
+# Environment
+.env
+
+# Virtual Environment
+.venv/
+venv/
+
+# Pipenv
+Pipfile.lock
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Pytest
+.pytest_cache/
+
+# Migrations cache
+**/__pycache__/
+
+# Uploads
+uploads/
+
+# Logs
+*.log
