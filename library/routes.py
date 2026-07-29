@@ -181,27 +181,88 @@ def delete_user(id):
 # =============================================================
 # NASRA — Borrowing System
 # =============================================================
+@app.route("/borrow", methods=["GET"])
+@login_required
+def get_borrow_records():
+    if current_user.role == "admin":
+        records = BorrowRecord.query.all()
+    else:
+        records = BorrowRecord.query.filter_by(user_id=current_user.id).all()
 
-# TODO: GET /borrow  (admin sees all, member sees own)
-# @app.route("/borrow", methods=["GET"])
-# @login_required
-# def get_borrow_records():
-#     pass
+    schema = BorrowSchema(many=True)
+    return jsonify(schema.dump(records)), 200
 
-# TODO: POST /borrow  (member borrows a book)
-# @app.route("/borrow", methods=["POST"])
-# @login_required
-# def borrow_book():
-#     pass
 
-# TODO: PATCH /borrow/<id>  (mark returned)
-# @app.route("/borrow/<int:id>", methods=["PATCH"])
-# @login_required
-# def return_book(id):
-#     pass
+@app.route("/borrow", methods=["POST"])
+@login_required
+def borrow_book():
+    data = request.get_json()
+    book_id = data.get("book_id")
 
-# TODO: DELETE /borrow/<id>  (admin only)
-# @app.route("/borrow/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_borrow_record(id):
-#     pass
+    book = Book.query.get(book_id)
+    if not book:
+        return jsonify({"error": "Book not found."}), 404
+
+    if book.available_copies <= 0:
+        return jsonify({"error": "No available copies of this book."}), 400
+
+    existing = BorrowRecord.query.filter_by(
+        user_id=current_user.id, book_id=book_id, status="borrowed"
+    ).first()
+    if existing:
+        return jsonify({"error": "You already have this book borrowed."}), 400
+
+    new_record = BorrowRecord(
+        user_id=current_user.id,
+        book_id=book_id,
+        due_date=datetime.utcnow() + timedelta(days=14),
+    )
+
+    book.available_copies -= 1
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    schema = BorrowSchema()
+    return jsonify(schema.dump(new_record)), 201
+
+
+@app.route("/borrow/<int:id>", methods=["PATCH"])
+@login_required
+def return_book(id):
+    record = BorrowRecord.query.get(id)
+    if not record:
+        return jsonify({"error": "Borrow record not found."}), 404
+
+    if record.user_id != current_user.id and current_user.role != "admin":
+        return jsonify(
+          {"error": "You are not authorized to update this record."}), 403
+
+    if record.status == "returned":
+        return jsonify({"error": "This book has already been returned."}), 400
+
+    record.return_date = datetime.utcnow()
+    record.status = "returned"
+    record.book.available_copies += 1
+
+    db.session.commit()
+
+    schema = BorrowSchema()
+    return jsonify(schema.dump(record)), 200
+
+
+@app.route("/borrow/<int:id>", methods=["DELETE"])
+@login_required
+def delete_borrow_record(id):
+    if current_user.role != "admin":
+        return jsonify(
+          {"error": "Only admins can delete borrow records."}), 403
+
+    record = BorrowRecord.query.get(id)
+    if not record:
+        return jsonify({"error": "Borrow record not found."}), 404
+
+    db.session.delete(record)
+    db.session.commit()
+
+    return jsonify({"message": "Borrow record deleted."}), 200
