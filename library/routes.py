@@ -129,9 +129,7 @@ from datetime import datetime, timedelta
 #     pass
 
 
-# =============================================================
 # NASRA — Borrowing System
-# =============================================================
 @app.route("/borrow", methods=["GET"])
 @login_required
 def get_borrow_records():

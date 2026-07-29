@@ -12,9 +12,7 @@ def seed():
     # NAOMI — Seed sample authors, categories, books
     # ==========================================================
 
-    # ==========================================================
     # NASRA — Seed sample borrow records
-    # ==========================================================
     user = User.query.filter_by(username="testuser").first()
     book = Book.query.filter_by(isbn="1234567890").first()
 
