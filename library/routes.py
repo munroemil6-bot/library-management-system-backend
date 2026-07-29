@@ -1,51 +1,102 @@
 from flask import request, jsonify
-from flask_login import login_required, current_user
+from flask_login import login_required, login_user, logout_user, current_user
+from marshmallow import ValidationError
 from . import app
+from .extensions import db, bcrypt
+from .models import User
+from .schemas import UserSchema, RegisterSchema, LoginSchema
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+register_schema = RegisterSchema()
+login_schema = LoginSchema()
 
 
 # =============================================================
 # MASON — Authentication & Users
 # =============================================================
 
-# TODO: POST /register
-# @app.route("/register", methods=["POST"])
-# def register():
-#     pass
+@app.route("/register", methods=["POST"])
+def register():
+    try:
+        data = register_schema.validate(request.get_json())
+    except ValidationError as e:
+        return jsonify(e.messages), 422
+    user = User(
+        username=data["username"],
+        email=data["email"],
+        password_hash=bcrypt.generate_password_hash(data["password"]).decode("utf-8"),
+    )
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user_schema.dump(user)), 201
 
-# TODO: POST /login
-# @app.route("/login", methods=["POST"])
-# def login():
-#     pass
 
-# TODO: POST /logout
-# @app.route("/logout", methods=["POST"])
-# @login_required
-# def logout():
-#     pass
+@app.route("/login", methods=["POST"])
+def login():
+    try:
+        data = login_schema.load(request.get_json())
+    except ValidationError as e:
+        return jsonify(e.messages), 422
+    user = User.query.filter_by(email=data["email"]).first()
+    if not user or not bcrypt.check_password_hash(user.password_hash, data["password"]):
+        return jsonify({"error": "Invalid email or password."}), 401
+    login_user(user)
+    return jsonify(user_schema.dump(user)), 200
 
-# TODO: GET /users
-# @app.route("/users", methods=["GET"])
-# @login_required
-# def get_users():
-#     pass
 
-# TODO: GET /users/<id>
-# @app.route("/users/<int:id>", methods=["GET"])
-# @login_required
-# def get_user(id):
-#     pass
+@app.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully."}), 200
 
-# TODO: PATCH /users/<id>
-# @app.route("/users/<int:id>", methods=["PATCH"])
-# @login_required
-# def update_user(id):
-#     pass
 
-# TODO: DELETE /users/<id>
-# @app.route("/users/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_user(id):
-#     pass
+@app.route("/users", methods=["GET"])
+@login_required
+def get_users():
+    if current_user.role != "admin":
+        return jsonify({"error": "Admins only."}), 403
+    return jsonify(users_schema.dump(User.query.all())), 200
+
+
+@app.route("/users/<int:id>", methods=["GET"])
+@login_required
+def get_user(id):
+    if current_user.role != "admin" and current_user.id != id:
+        return jsonify({"error": "Unauthorized."}), 403
+    user = db.get_or_404(User, id)
+    return jsonify(user_schema.dump(user)), 200
+
+
+@app.route("/users/<int:id>", methods=["PATCH"])
+@login_required
+def update_user(id):
+    if current_user.role != "admin" and current_user.id != id:
+        return jsonify({"error": "Unauthorized."}), 403
+    user = db.get_or_404(User, id)
+    data = request.get_json()
+    if "username" in data:
+        user.username = data["username"]
+    if "email" in data:
+        user.email = data["email"]
+    if "password" in data:
+        user.password_hash = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+    if "role" in data and current_user.role == "admin":
+        user.role = data["role"]
+    db.session.commit()
+    return jsonify(user_schema.dump(user)), 200
+
+
+@app.route("/users/<int:id>", methods=["DELETE"])
+@login_required
+def delete_user(id):
+    if current_user.role != "admin":
+        return jsonify({"error": "Admins only."}), 403
+    user = db.get_or_404(User, id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted."}), 200
 
 
 # =============================================================
