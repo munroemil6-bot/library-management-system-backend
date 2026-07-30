@@ -1,51 +1,102 @@
 from flask import request, jsonify
-from flask_login import login_required, current_user
+from flask_login import login_required, login_user, logout_user, current_user
+from marshmallow import ValidationError
 from . import app
+from .extensions import db, bcrypt
+from .models import User
+from .schemas import UserSchema, RegisterSchema, LoginSchema
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+register_schema = RegisterSchema()
+login_schema = LoginSchema()
 
 
 # =============================================================
 # MASON — Authentication & Users
 # =============================================================
 
-# TODO: POST /register
-# @app.route("/register", methods=["POST"])
-# def register():
-#     pass
+@app.route("/register", methods=["POST"])
+def register():
+    try:
+        data = register_schema.validate(request.get_json())
+    except ValidationError as e:
+        return jsonify(e.messages), 422
+    user = User(
+        username=data["username"],
+        email=data["email"],
+        password_hash=bcrypt.generate_password_hash(data["password"]).decode("utf-8"),
+    )
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user_schema.dump(user)), 201
 
-# TODO: POST /login
-# @app.route("/login", methods=["POST"])
-# def login():
-#     pass
 
-# TODO: POST /logout
-# @app.route("/logout", methods=["POST"])
-# @login_required
-# def logout():
-#     pass
+@app.route("/login", methods=["POST"])
+def login():
+    try:
+        data = login_schema.load(request.get_json())
+    except ValidationError as e:
+        return jsonify(e.messages), 422
+    user = User.query.filter_by(email=data["email"]).first()
+    if not user or not bcrypt.check_password_hash(user.password_hash, data["password"]):
+        return jsonify({"error": "Invalid email or password."}), 401
+    login_user(user)
+    return jsonify(user_schema.dump(user)), 200
 
-# TODO: GET /users
-# @app.route("/users", methods=["GET"])
-# @login_required
-# def get_users():
-#     pass
 
-# TODO: GET /users/<id>
-# @app.route("/users/<int:id>", methods=["GET"])
-# @login_required
-# def get_user(id):
-#     pass
+@app.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully."}), 200
 
-# TODO: PATCH /users/<id>
-# @app.route("/users/<int:id>", methods=["PATCH"])
-# @login_required
-# def update_user(id):
-#     pass
 
-# TODO: DELETE /users/<id>
-# @app.route("/users/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_user(id):
-#     pass
+@app.route("/users", methods=["GET"])
+@login_required
+def get_users():
+    if current_user.role != "admin":
+        return jsonify({"error": "Admins only."}), 403
+    return jsonify(users_schema.dump(User.query.all())), 200
+
+
+@app.route("/users/<int:id>", methods=["GET"])
+@login_required
+def get_user(id):
+    if current_user.role != "admin" and current_user.id != id:
+        return jsonify({"error": "Unauthorized."}), 403
+    user = db.get_or_404(User, id)
+    return jsonify(user_schema.dump(user)), 200
+
+
+@app.route("/users/<int:id>", methods=["PATCH"])
+@login_required
+def update_user(id):
+    if current_user.role != "admin" and current_user.id != id:
+        return jsonify({"error": "Unauthorized."}), 403
+    user = db.get_or_404(User, id)
+    data = request.get_json()
+    if "username" in data:
+        user.username = data["username"]
+    if "email" in data:
+        user.email = data["email"]
+    if "password" in data:
+        user.password_hash = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
+    if "role" in data and current_user.role == "admin":
+        user.role = data["role"]
+    db.session.commit()
+    return jsonify(user_schema.dump(user)), 200
+
+
+@app.route("/users/<int:id>", methods=["DELETE"])
+@login_required
+def delete_user(id):
+    if current_user.role != "admin":
+        return jsonify({"error": "Admins only."}), 403
+    user = db.get_or_404(User, id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted."}), 200
 
 
 # =============================================================
@@ -160,27 +211,88 @@ def get_author(author_id):
 # =============================================================
 # NASRA — Borrowing System
 # =============================================================
+@app.route("/borrow", methods=["GET"])
+@login_required
+def get_borrow_records():
+    if current_user.role == "admin":
+        records = BorrowRecord.query.all()
+    else:
+        records = BorrowRecord.query.filter_by(user_id=current_user.id).all()
 
-# TODO: GET /borrow  (admin sees all, member sees own)
-# @app.route("/borrow", methods=["GET"])
-# @login_required
-# def get_borrow_records():
-#     pass
+    schema = BorrowSchema(many=True)
+    return jsonify(schema.dump(records)), 200
 
-# TODO: POST /borrow  (member borrows a book)
-# @app.route("/borrow", methods=["POST"])
-# @login_required
-# def borrow_book():
-#     pass
 
-# TODO: PATCH /borrow/<id>  (mark returned)
-# @app.route("/borrow/<int:id>", methods=["PATCH"])
-# @login_required
-# def return_book(id):
-#     pass
+@app.route("/borrow", methods=["POST"])
+@login_required
+def borrow_book():
+    data = request.get_json()
+    book_id = data.get("book_id")
 
-# TODO: DELETE /borrow/<id>  (admin only)
-# @app.route("/borrow/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_borrow_record(id):
-#     pass
+    book = Book.query.get(book_id)
+    if not book:
+        return jsonify({"error": "Book not found."}), 404
+
+    if book.available_copies <= 0:
+        return jsonify({"error": "No available copies of this book."}), 400
+
+    existing = BorrowRecord.query.filter_by(
+        user_id=current_user.id, book_id=book_id, status="borrowed"
+    ).first()
+    if existing:
+        return jsonify({"error": "You already have this book borrowed."}), 400
+
+    new_record = BorrowRecord(
+        user_id=current_user.id,
+        book_id=book_id,
+        due_date=datetime.utcnow() + timedelta(days=14),
+    )
+
+    book.available_copies -= 1
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    schema = BorrowSchema()
+    return jsonify(schema.dump(new_record)), 201
+
+
+@app.route("/borrow/<int:id>", methods=["PATCH"])
+@login_required
+def return_book(id):
+    record = BorrowRecord.query.get(id)
+    if not record:
+        return jsonify({"error": "Borrow record not found."}), 404
+
+    if record.user_id != current_user.id and current_user.role != "admin":
+        return jsonify(
+          {"error": "You are not authorized to update this record."}), 403
+
+    if record.status == "returned":
+        return jsonify({"error": "This book has already been returned."}), 400
+
+    record.return_date = datetime.utcnow()
+    record.status = "returned"
+    record.book.available_copies += 1
+
+    db.session.commit()
+
+    schema = BorrowSchema()
+    return jsonify(schema.dump(record)), 200
+
+
+@app.route("/borrow/<int:id>", methods=["DELETE"])
+@login_required
+def delete_borrow_record(id):
+    if current_user.role != "admin":
+        return jsonify(
+          {"error": "Only admins can delete borrow records."}), 403
+
+    record = BorrowRecord.query.get(id)
+    if not record:
+        return jsonify({"error": "Borrow record not found."}), 404
+
+    db.session.delete(record)
+    db.session.commit()
+
+    return jsonify({"message": "Borrow record deleted."}), 200
