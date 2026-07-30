@@ -99,8 +99,105 @@ def delete_user(id):
 
 
 # NAOMI — Library Management
+# =============================================================
+from flask import request, jsonify
+from flask_login import login_required, current_user
+from app import app, db
+from app.models.author import Author
+from app.schemas.catalog_schema import author_schema, authors_schema
 
-# TODO: GET /books
+# Helper function to check if the logged-in user is an admin
+def is_admin():
+    return getattr(current_user, 'role', None) == 'admin'
+
+
+# ==========================================
+# AUTHOR ROUTES
+# ==========================================
+
+# 1. GET ALL AUTHORS
+@app.route('/authors', methods=['GET'])
+def get_authors():
+    authors = Author.query.all()
+    return jsonify(authors_schema.dump(authors)), 200
+
+
+# 2. GET SINGLE AUTHOR
+@app.route('/authors/<int:author_id>', methods=['GET'])
+def get_author(author_id):
+    author = Author.query.get_or_404(author_id, description="Author not found")
+    return jsonify(author_schema.dump(author)), 200
+
+
+# 3. CREATE AUTHOR (POST)
+@app.route('/authors', methods=['POST'])
+@login_required
+def create_author():
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    data = request.get_json()
+    if not data or not data.get('name'):
+        return jsonify({"message": "Author name is required"}), 400
+
+    new_author = Author(
+        name=data['name'],
+        biography=data.get('biography', '')
+    )
+
+    db.session.add(new_author)
+    db.session.commit()
+
+    return jsonify(author_schema.dump(new_author)), 201
+
+
+# 4. UPDATE AUTHOR (PATCH)
+@app.route('/authors/<int:author_id>', methods=['PATCH'])
+@login_required
+def update_author(author_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    author = Author.query.get_or_404(author_id, description="Author not found")
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"message": "No input data provided"}), 400
+
+    if 'name' in data:
+        author.name = data['name']
+    if 'biography' in data:
+        author.biography = data['biography']
+
+    db.session.commit()
+
+    return jsonify(author_schema.dump(author)), 200
+
+
+# 5. DELETE AUTHOR (DELETE)
+@app.route('/authors/<int:author_id>', methods=['DELETE'])
+@login_required
+def delete_author(author_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    author = Author.query.get_or_404(author_id, description="Author not found")
+
+    if author.books:
+        return jsonify({"message": "Cannot delete author associated with existing books"}), 400
+
+    db.session.delete(author)
+    db.session.commit()
+
+    return jsonify({"message": f"Author '{author.name}' deleted successfully"}), 200
+
+# ==========================================
+# AUTHOR ROUTES
+# ==========================================
+
+# 1. GET ALL AUTHORS / GET SINGLE AUTHOR
+
+#
 # @app.route("/books", methods=["GET"])
 # def get_books():
 #     pass
