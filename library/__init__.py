@@ -9,24 +9,32 @@ app.config.from_object(Config)
 
 os.makedirs(app.instance_path, exist_ok=True)
 
-# Allow credentialed requests from local dev servers so the browser can receive
-# and send the session cookie during cross-origin calls from Vite.
+frontend_origins = os.getenv(
+    "FRONTEND_ORIGINS",
+    ",".join([
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:5177",
+        "http://localhost:5178",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:5176",
+        "http://127.0.0.1:5177",
+        "http://127.0.0.1:5178",
+        "https://library-management-system-frontend-en0q.onrender.com",
+        "https://library-management-system-frontend-jade.vercel.app",
+    ])
+)
+allowed_origins = [origin.strip() for origin in frontend_origins.split(",") if origin.strip()]
+
+# Allow credentialed requests from local dev servers and deployed frontends so
+# the browser can send cookies and headers across origins.
 CORS(app, supports_credentials=True, resources={
     r"/api/*": {
-        "origins": [
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-            "http://localhost:5176",
-            "http://localhost:5177",
-            "http://localhost:5178",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "http://127.0.0.1:5175",
-            "http://127.0.0.1:5176",
-            "http://127.0.0.1:5177",
-            "http://127.0.0.1:5178",
-        ]
+        "origins": allowed_origins
     }
 })
 
