@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from .config import Config
@@ -5,6 +6,8 @@ from .extensions import db, migrate, bcrypt, login_manager, ma
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+os.makedirs(app.instance_path, exist_ok=True)
 
 CORS(app)
 
@@ -21,3 +24,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 from . import routes
+
+with app.app_context():
+    db.create_all()
