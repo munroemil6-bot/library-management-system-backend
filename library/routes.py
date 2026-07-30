@@ -3,8 +3,8 @@ from flask_login import login_required, login_user, logout_user, current_user
 from marshmallow import ValidationError
 from . import app
 from .extensions import db, bcrypt
-from .models import User,  Book, BorrowRecord
-from .schemas import UserSchema, RegisterSchema, LoginSchema, BorrowSchema
+from .models import User,  Book, BorrowRecord, Author, Category
+from .schemas import UserSchema, RegisterSchema, LoginSchema, BorrowSchema, AuthorSchema, CategorySchema, BookSchema
 from datetime import datetime, timedelta
 
 user_schema = UserSchema()
