@@ -82,70 +82,7 @@ def get_author(author_id):
     return jsonify(author_schema.dump(author)), 200
 
 
-# 2. CREATE AUTHOR (POST)
-@catalog_bp.route('/authors', methods=['POST'])
-@login_required
-def create_author():
-    if not admin_required():
-        return jsonify({"message": "Admin privileges required"}), 403
-
-    data = request.get_json()
-    if not data or not data.get('name'):
-        return jsonify({"message": "Author name is required"}), 400
-
-    new_author = Author(
-        name=data['name'],
-        biography=data.get('biography', '')
-    )
-
-    db.session.add(new_author)
-    db.session.commit()
-
-    return jsonify(author_schema.dump(new_author)), 201
-
-
-# 3. UPDATE AUTHOR (PATCH)
-@catalog_bp.route('/authors/<int:author_id>', methods=['PATCH'])
-@login_required
-def update_author(author_id):
-    if not admin_required():
-        return jsonify({"message": "Admin privileges required"}), 403
-
-    author = Author.query.get_or_404(author_id, description="Author not found")
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"message": "No input data provided"}), 400
-
-    
-    if 'name' in data:
-        author.name = data['name']
-    if 'biography' in data:
-        author.biography = data['biography']
-
-    db.session.commit()
-
-    return jsonify(author_schema.dump(author)), 200
-
-
-# 4. DELETE AUTHOR (DELETE)
-@catalog_bp.route('/authors/<int:author_id>', methods=['DELETE'])
-@login_required
-def delete_author(author_id):
-    if not admin_required():
-        return jsonify({"message": "Admin privileges required"}), 403
-
-    author = Author.query.get_or_404(author_id, description="Author not found")
-
-    
-    if author.books:
-        return jsonify({"message": "Cannot delete author associated with existing books"}), 400
-
-    db.session.delete(author)
-    db.session.commit()
-
-    return jsonify({"message": f"Author '{author.name}' deleted successfully"}), 200
-# TODO: GET /books
+#
 # @app.route("/books", methods=["GET"])
 # def get_books():
 #     pass
