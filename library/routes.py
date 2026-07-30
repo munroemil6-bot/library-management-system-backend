@@ -1,21 +1,53 @@
+from datetime import datetime, timedelta
+from marshmallow import ValidationError
 from flask import request, jsonify
 from flask_login import login_required, login_user, logout_user, current_user
-from marshmallow import ValidationError
 from . import app
 from .extensions import db, bcrypt
-from .models import User,  Book, BorrowRecord, Author, Category
-from .schemas import UserSchema, RegisterSchema, LoginSchema, BorrowSchema, AuthorSchema, CategorySchema, BookSchema
-from datetime import datetime, timedelta
+from .models import User, Book, BorrowRecord, Author, Category
+from .schemas import (
+    UserSchema,
+    RegisterSchema,
+    LoginSchema,
+    BorrowSchema,
+    AuthorSchema,
+    CategorySchema,
+    BookSchema,
+)
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 register_schema = RegisterSchema()
 login_schema = LoginSchema()
 borrow_schema = BorrowSchema()
+author_schema = AuthorSchema()
+authors_schema = AuthorSchema(many=True)
+category_schema = CategorySchema()
+categories_schema = CategorySchema(many=True)
+book_schema = BookSchema()
+books_schema = BookSchema(many=True)
+
+
+# API index for frontend
+@app.route("/api", methods=["GET"])
+def api_index():
+    return jsonify({
+        "message": "Welcome to BookBarn API",
+        "endpoints": {
+            "register": {"method": "POST", "path": "/api/register"},
+            "login": {"method": "POST", "path": "/api/login"},
+            "logout": {"method": "POST", "path": "/api/logout"},
+            "users": {"method": "GET", "path": "/api/users"},
+            "authors": {"method": "GET", "path": "/api/authors"},
+            "categories": {"method": "GET", "path": "/api/categories"},
+            "books": {"method": "GET", "path": "/api/books"},
+            "borrow_records": {"method": "GET", "path": "/api/borrow"},
+        },
+    }), 200
 
 
 # MASON — Authentication & Users
-@app.route("/register", methods=["POST"])
+@app.route("/api/register", methods=["POST"])
 def register():
     try:
         data = register_schema.validate(request.get_json())
@@ -31,7 +63,7 @@ def register():
     return jsonify(user_schema.dump(user)), 201
 
 
-@app.route("/login", methods=["POST"])
+@app.route("/api/login", methods=["POST"])
 def login():
     try:
         data = login_schema.load(request.get_json())
@@ -44,14 +76,14 @@ def login():
     return jsonify(user_schema.dump(user)), 200
 
 
-@app.route("/logout", methods=["POST"])
+@app.route("/api/logout", methods=["POST"])
 @login_required
 def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully."}), 200
 
 
-@app.route("/users", methods=["GET"])
+@app.route("/api/users", methods=["GET"])
 @login_required
 def get_users():
     if current_user.role != "admin":
@@ -59,7 +91,7 @@ def get_users():
     return jsonify(users_schema.dump(User.query.all())), 200
 
 
-@app.route("/users/<int:id>", methods=["GET"])
+@app.route("/api/users/<int:id>", methods=["GET"])
 @login_required
 def get_user(id):
     if current_user.role != "admin" and current_user.id != id:
@@ -68,7 +100,7 @@ def get_user(id):
     return jsonify(user_schema.dump(user)), 200
 
 
-@app.route("/users/<int:id>", methods=["PATCH"])
+@app.route("/api/users/<int:id>", methods=["PATCH"])
 @login_required
 def update_user(id):
     if current_user.role != "admin" and current_user.id != id:
@@ -87,7 +119,7 @@ def update_user(id):
     return jsonify(user_schema.dump(user)), 200
 
 
-@app.route("/users/<int:id>", methods=["DELETE"])
+@app.route("/api/users/<int:id>", methods=["DELETE"])
 @login_required
 def delete_user(id):
     if current_user.role != "admin":
@@ -99,36 +131,21 @@ def delete_user(id):
 
 
 # NAOMI — Library Management
-from flask import request, jsonify
-from flask_login import login_required, current_user
-from app import app, db
-from app.models.author import Author
-from app.models.category import Category
-from app.models.book import Book
-from app.schemas.catalog_schema import (
-    author_schema, authors_schema,
-    category_schema, categories_schema,
-    book_schema, books_schema
-)
+
 def is_admin():
-    return getattr(current_user, 'role', None) == 'admin'
+    return getattr(current_user, "role", None) == "admin"
 
-
-# ==========================================
-# 1. AUTHOR ROUTES
-# ==========================================
-
-@app.route('/authors', methods=['GET'])
+@app.route('/api/authors', methods=['GET'])
 def get_authors():
     authors = Author.query.all()
     return jsonify(authors_schema.dump(authors)), 200
 
-@app.route('/authors/<int:author_id>', methods=['GET'])
+@app.route('/api/authors/<int:author_id>', methods=['GET'])
 def get_author(author_id):
     author = Author.query.get_or_404(author_id, description="Author not found")
     return jsonify(author_schema.dump(author)), 200
 
-@app.route('/authors', methods=['POST'])
+@app.route('/api/authors', methods=['POST'])
 @login_required
 def create_author():
     if not is_admin():
@@ -143,7 +160,7 @@ def create_author():
     db.session.commit()
     return jsonify(author_schema.dump(new_author)), 201
 
-@app.route('/authors/<int:author_id>', methods=['PATCH'])
+@app.route('/api/authors/<int:author_id>', methods=['PATCH'])
 @login_required
 def update_author(author_id):
     if not is_admin():
@@ -160,7 +177,7 @@ def update_author(author_id):
     db.session.commit()
     return jsonify(author_schema.dump(author)), 200
 
-@app.route('/authors/<int:author_id>', methods=['DELETE'])
+@app.route('/api/authors/<int:author_id>', methods=['DELETE'])
 @login_required
 def delete_author(author_id):
     if not is_admin():
@@ -175,21 +192,18 @@ def delete_author(author_id):
     return jsonify({"message": f"Author '{author.name}' deleted successfully"}), 200
 
 
-# ==========================================
-# 2. CATEGORY ROUTES
-# ==========================================
 
-@app.route('/categories', methods=['GET'])
+@app.route('/api/categories', methods=['GET'])
 def get_categories():
     categories = Category.query.all()
     return jsonify(categories_schema.dump(categories)), 200
 
-@app.route('/categories/<int:category_id>', methods=['GET'])
+@app.route('/api/categories/<int:category_id>', methods=['GET'])
 def get_category(category_id):
     category = Category.query.get_or_404(category_id, description="Category not found")
     return jsonify(category_schema.dump(category)), 200
 
-@app.route('/categories', methods=['POST'])
+@app.route('/api/categories', methods=['POST'])
 @login_required
 def create_category():
     if not is_admin():
@@ -208,7 +222,7 @@ def create_category():
     db.session.commit()
     return jsonify(category_schema.dump(new_category)), 201
 
-@app.route('/categories/<int:category_id>', methods=['PATCH'])
+@app.route('/api/categories/<int:category_id>', methods=['PATCH'])
 @login_required
 def update_category(category_id):
     if not is_admin():
@@ -225,7 +239,7 @@ def update_category(category_id):
     db.session.commit()
     return jsonify(category_schema.dump(category)), 200
 
-@app.route('/categories/<int:category_id>', methods=['DELETE'])
+@app.route('/api/categories/<int:category_id>', methods=['DELETE'])
 @login_required
 def delete_category(category_id):
     if not is_admin():
@@ -240,11 +254,7 @@ def delete_category(category_id):
     return jsonify({"message": f"Category '{category.name}' deleted successfully"}), 200
 
 
-# ==========================================
-# 3. BOOK ROUTES (Includes Search & Filtering)
-# ==========================================
-
-@app.route('/books', methods=['GET'])
+@app.route('/api/books', methods=['GET'])
 def get_books():
     query = Book.query
 
@@ -262,12 +272,12 @@ def get_books():
     books = query.all()
     return jsonify(books_schema.dump(books)), 200
 
-@app.route('/books/<int:book_id>', methods=['GET'])
+@app.route('/api/books/<int:book_id>', methods=['GET'])
 def get_book(book_id):
     book = Book.query.get_or_404(book_id, description="Book not found")
     return jsonify(book_schema.dump(book)), 200
 
-@app.route('/books', methods=['POST'])
+@app.route('/api/books', methods=['POST'])
 @login_required
 def create_book():
     if not is_admin():
@@ -297,7 +307,7 @@ def create_book():
     db.session.commit()
     return jsonify(book_schema.dump(new_book)), 201
 
-@app.route('/books/<int:book_id>', methods=['PATCH'])
+@app.route('/api/books/<int:book_id>', methods=['PATCH'])
 @login_required
 def update_book(book_id):
     if not is_admin():
@@ -313,7 +323,7 @@ def update_book(book_id):
     db.session.commit()
     return jsonify(book_schema.dump(book)), 200
 
-@app.route('/books/<int:book_id>', methods=['DELETE'])
+@app.route('/api/books/<int:book_id>', methods=['DELETE'])
 @login_required
 def delete_book(book_id):
     if not is_admin():
@@ -325,11 +335,8 @@ def delete_book(book_id):
     return jsonify({"message": f"Book '{book.title}' deleted successfully"}), 200
 
 
-
-
-
 # NASRA — Borrowing System
-@app.route("/borrow", methods=["GET"])
+@app.route("/api/borrow", methods=["GET"])
 @login_required
 def get_borrow_records():
     if current_user.role == "admin":
@@ -341,7 +348,7 @@ def get_borrow_records():
     return jsonify(schema.dump(records)), 200
 
 
-@app.route("/borrow", methods=["POST"])
+@app.route("/api/borrow", methods=["POST"])
 @login_required
 def borrow_book():
     data = request.get_json()
@@ -375,7 +382,7 @@ def borrow_book():
     return jsonify(schema.dump(new_record)), 201
 
 
-@app.route("/borrow/<int:id>", methods=["PATCH"])
+@app.route("/api/borrow/<int:id>", methods=["PATCH"])
 @login_required
 def return_book(id):
     record = BorrowRecord.query.get(id)
@@ -399,7 +406,7 @@ def return_book(id):
     return jsonify(schema.dump(record)), 200
 
 
-@app.route("/borrow/<int:id>", methods=["DELETE"])
+@app.route("/api/borrow/<int:id>", methods=["DELETE"])
 @login_required
 def delete_borrow_record(id):
     if current_user.role != "admin":
