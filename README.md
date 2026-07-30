@@ -1,149 +1,97 @@
-# BookBarn Backend
+# Smart Library Management System - Backend
 
-## Overview
+## Project Description
 
-BookBarn Backend is a RESTful API built using Flask. It provides authentication, library management, borrowing functionality, and communicates with the React frontend.
+The Smart Library Management System is a Flask REST API designed to manage library operations efficiently. It allows users to register, log in, browse books, borrow and return books, while providing librarians with tools to manage books, authors, categories, and users.
+
+This project is being developed as a group project to demonstrate backend development using Flask and RESTful API principles.
 
 ---
 
-# Technologies
+## Current Progress
 
+### Completed Features
+
+- Flask project setup
+- Application Factory Pattern
+- SQLAlchemy database configuration
+- SQLite database integration
+- Flask-Migrate setup
+- Marshmallow schemas
+- User registration
+- User login
+- User logout
+- Password hashing using Flask-Bcrypt
+- User CRUD operations
+- Borrow book endpoint
+- Return book endpoint
+- Database migrations
+- Initial database creation
+- Docker setup (in progress)
+
+---
+
+## Features In Progress
+
+- Book CRUD operations
+- Author CRUD operations
+- Category CRUD operations
+- API testing with Postman
+- Docker image optimization
+- React frontend integration
+
+---
+
+## Technologies Used
+
+- Python 3.12
 - Flask
 - Flask SQLAlchemy
 - Flask Migrate
-- Flask Login
-- Flask Bcrypt
 - Flask Marshmallow
-- Flask CORS
-- SQLite (Development)
-- PostgreSQL (Production)
+- Flask Bcrypt
+- Flask Login
+- Marshmallow
+- SQLite
 - Docker
 - Gunicorn
+- Git
+- GitHub
 
 ---
 
-# Backend Responsibilities
+## Project Structure
 
-The backend is responsible for:
-
-- User Authentication
-- Password Hashing
-- User Authorization
-- Database Management
-- CRUD Operations
-- API Endpoints
-- Business Logic
-- Validation
-- Session Management
-- Database Relationships
-
----
-
-# Database Models
-
-## User
-
-- id
-- username
-- email
-- password_hash
-- role
-- created_at
-
----
-
-## Author
-
-- id
-- name
-- biography
-
----
-
-## Category
-
-- id
-- name
-- description
-
----
-
-## Book
-
-- id
-- title
-- isbn
-- description
-- published_year
-- copies
-- available_copies
-- author_id
-- category_id
-
----
-
-## BorrowRecord
-
-- id
-- borrow_date
-- due_date
-- return_date
-- status
-- user_id
-- book_id
-
----
-
-# Project Structure
-
-backend/
-
-```
+```text
 backend/
 │
-├── app.py
-├── config.py
-├── seed.py
-├── extensions.py
+├── library/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── extensions.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── routes.py
+│   ├── seed.py
+│   ├── uploads/
+│   ├── static/
+│   └── templates/
 │
-├── models.py
-├── routes.py
-├── schemas.py
-│
-├── instance/
 ├── migrations/
-├── uploads/
-├── static/
-│
-├── Dockerfile
+├── instance/
+├── tests/
+├── run.py
 ├── requirements.txt
-├── Pipfile
-├── Pipfile.lock
-├── .env
-└── README.md
+├── Dockerfile
+├── README.md
+└── Pipfile
 ```
 
 ---
 
-# Development Phases
+## Database Models
 
-## Phase 1
-
-- Setup Flask project
-- Configure virtual environment
-- Install dependencies
-- Configure Flask app
-- Configure SQLAlchemy
-- Configure Flask Login
-- Configure Flask Bcrypt
-- Configure Marshmallow
-- Configure CORS
-
----
-
-## Phase 2
-
-Create Database Models
+The application currently includes the following models:
 
 - User
 - Author
@@ -151,166 +99,194 @@ Create Database Models
 - Book
 - BorrowRecord
 
-Create Relationships
-
-Run
-
-```
-flask db init
-flask db migrate
-flask db upgrade
-```
+Database management is handled using SQLAlchemy and Flask-Migrate.
 
 ---
 
-## Phase 3
+## Authentication
 
-Create Marshmallow Schemas
+The authentication system currently supports:
 
-- UserSchema
-- AuthorSchema
-- CategorySchema
-- BookSchema
-- BorrowSchema
+- User Registration
+- User Login
+- User Logout
+- Password Hashing
 
-Add validations.
-
----
-
-## Phase 4
-
-Authentication
-
-Implement
-
-- Register
-- Login
-- Logout
-
-Password hashing
-
-Session management
-
-Role-based authorization
+Passwords are securely hashed before being stored in the database.
 
 ---
 
-## Phase 5
+## Available API Endpoints
 
-Build REST API
+### Authentication
 
-Authentication
+| Method | Endpoint |
+|---------|----------|
+| POST | /register |
+| POST | /login |
+| POST | /logout |
 
-```
-POST /register
-POST /login
-POST /logout
-```
+### Users
 
-Users
+| Method | Endpoint |
+|---------|----------|
+| GET | /users |
+| GET | /users/<id> |
+| PATCH | /users/<id> |
+| DELETE | /users/<id> |
 
-```
-GET
-GET /<id>
-PATCH
-DELETE
-```
+### Borrow Records
 
-Books
-
-```
-GET
-GET /<id>
-POST
-PATCH
-DELETE
-```
-
-Authors
-
-```
-GET
-POST
-PATCH
-DELETE
-```
-
-Categories
-
-```
-GET
-POST
-PATCH
-DELETE
-```
-
-Borrow Records
-
-```
-GET
-POST
-PATCH
-DELETE
-```
+| Method | Endpoint |
+|---------|----------|
+| GET | /borrow |
+| POST | /borrow |
+| PATCH | /borrow/<id> |
+| DELETE | /borrow/<id> |
 
 ---
 
-## Phase 6
+## Installation
 
-Testing
+Clone the repository
 
-- Postman
-- API Validation
-- Relationship Testing
-- Authentication Testing
-
----
-
-## Phase 7
-
-Deployment
-
-- Docker
-- Docker Hub
-- Render
-- PostgreSQL
-
----
-
-# Installation
-
-Clone repository
-
-```
+```bash
 git clone <repository-url>
+cd backend
 ```
 
 Install dependencies
 
-```
+```bash
 pipenv install
-```
-
-Activate virtual environment
-
-```
 pipenv shell
 ```
 
-Run migrations
+Run the application
 
-```
-flask db upgrade
+```bash
+python run.py
 ```
 
-Start server
+or
 
-```
-python app.py
+```bash
+flask run
 ```
 
 ---
 
-# Expected Outcome
+## Database Migration
 
-A secure, scalable RESTful API providing authentication, library management, and borrowing services for the BookBarn frontend.
+Initialize migrations (only once)
+
+```bash
+flask db init
+```
+
+Create a migration
+
+```bash
+flask db migrate -m "Initial database"
+```
+
+Apply the migration
+
+```bash
+flask db upgrade
+```
+
+---
+
+## Seeding the Database
+
+Populate the database with sample data.
+
+```bash
+python library/seed.py
+```
+
+---
+
+## Docker
+
+Build the Docker image
+
+```bash
+docker build -t ciphermun/library-backend:latest .
+```
+
+Run the Docker container
+
+```bash
+docker run -p 8000:8000 ciphermun/library-backend:latest
+```
+
+Push the image to Docker Hub
+
+```bash
+docker push ciphermun/library-backend:latest
+```
+
+---
+
+## Testing
+
+The backend is tested using:
+
+- Postman
+- SQLite Viewer
+- Flask Development Server
+
+---
+
+## Planned Improvements
+
+Future enhancements include:
+
+- JWT Authentication
+- Role-Based Access Control
+- Book Search and Filtering
+- Book Reservation System
+- Email Notifications
+- Fine Management
+- Pagination
+- PostgreSQL Database Support
+- Continuous Integration and Deployment (CI/CD)
+- React Frontend Integration
+- Automated Unit Testing
+
+---
+
+## Team Members
+
+| Member | Responsibility |
+|----------|----------------|
+| Myles Munroe | Project Manager, Authentication, Database Design, Backend Integration, Docker |
+| Mason | User Authentication and User Management |
+| Naomi | Books, Authors and Categories |
+| Nassra | Borrowing System and API Testing |
+
+---
+
+## Learning Objectives
+
+This project demonstrates practical knowledge of:
+
+- Flask Application Factory Pattern
+- RESTful API Development
+- SQLAlchemy ORM
+- Database Design
+- Database Migrations
+- Authentication
+- Password Hashing
+- Marshmallow Serialization
+- Docker Containerization
+- Git Collaboration
+- Backend Architecture
+
+---
+
+## License
+
+This project was developed for educational purposes as part of a Software Engineering learning program.
