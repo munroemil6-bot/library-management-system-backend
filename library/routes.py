@@ -99,59 +99,50 @@ def delete_user(id):
 
 
 # NAOMI — Library Management
-# =============================================================
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from app import app, db
 from app.models.author import Author
-from app.schemas.catalog_schema import author_schema, authors_schema
-
-# Helper function to check if the logged-in user is an admin
+from app.models.category import Category
+from app.models.book import Book
+from app.schemas.catalog_schema import (
+    author_schema, authors_schema,
+    category_schema, categories_schema,
+    book_schema, books_schema
+)
 def is_admin():
     return getattr(current_user, 'role', None) == 'admin'
 
 
 # ==========================================
-# AUTHOR ROUTES
+# 1. AUTHOR ROUTES
 # ==========================================
 
-# 1. GET ALL AUTHORS
 @app.route('/authors', methods=['GET'])
 def get_authors():
     authors = Author.query.all()
     return jsonify(authors_schema.dump(authors)), 200
 
-
-# 2. GET SINGLE AUTHOR
 @app.route('/authors/<int:author_id>', methods=['GET'])
 def get_author(author_id):
     author = Author.query.get_or_404(author_id, description="Author not found")
     return jsonify(author_schema.dump(author)), 200
 
-
-# 3. CREATE AUTHOR (POST)
 @app.route('/authors', methods=['POST'])
 @login_required
 def create_author():
     if not is_admin():
         return jsonify({"message": "Admin privileges required"}), 403
 
-    data = request.get_json()
-    if not data or not data.get('name'):
+    data = request.get_json() or {}
+    if not data.get('name'):
         return jsonify({"message": "Author name is required"}), 400
 
-    new_author = Author(
-        name=data['name'],
-        biography=data.get('biography', '')
-    )
-
+    new_author = Author(name=data['name'], biography=data.get('biography', ''))
     db.session.add(new_author)
     db.session.commit()
-
     return jsonify(author_schema.dump(new_author)), 201
 
-
-# 4. UPDATE AUTHOR (PATCH)
 @app.route('/authors/<int:author_id>', methods=['PATCH'])
 @login_required
 def update_author(author_id):
@@ -159,10 +150,7 @@ def update_author(author_id):
         return jsonify({"message": "Admin privileges required"}), 403
 
     author = Author.query.get_or_404(author_id, description="Author not found")
-    data = request.get_json()
-
-    if not data:
-        return jsonify({"message": "No input data provided"}), 400
+    data = request.get_json() or {}
 
     if 'name' in data:
         author.name = data['name']
@@ -170,11 +158,8 @@ def update_author(author_id):
         author.biography = data['biography']
 
     db.session.commit()
-
     return jsonify(author_schema.dump(author)), 200
 
-
-# 5. DELETE AUTHOR (DELETE)
 @app.route('/authors/<int:author_id>', methods=['DELETE'])
 @login_required
 def delete_author(author_id):
@@ -182,94 +167,165 @@ def delete_author(author_id):
         return jsonify({"message": "Admin privileges required"}), 403
 
     author = Author.query.get_or_404(author_id, description="Author not found")
-
     if author.books:
         return jsonify({"message": "Cannot delete author associated with existing books"}), 400
 
     db.session.delete(author)
     db.session.commit()
-
     return jsonify({"message": f"Author '{author.name}' deleted successfully"}), 200
 
+
 # ==========================================
-# AUTHOR ROUTES
+# 2. CATEGORY ROUTES
 # ==========================================
 
-# 1. GET ALL AUTHORS / GET SINGLE AUTHOR
+@app.route('/categories', methods=['GET'])
+def get_categories():
+    categories = Category.query.all()
+    return jsonify(categories_schema.dump(categories)), 200
 
-#
-# @app.route("/books", methods=["GET"])
-# def get_books():
-#     pass
+@app.route('/categories/<int:category_id>', methods=['GET'])
+def get_category(category_id):
+    category = Category.query.get_or_404(category_id, description="Category not found")
+    return jsonify(category_schema.dump(category)), 200
 
-# TODO: GET /books/<id>
-# @app.route("/books/<int:id>", methods=["GET"])
-# def get_book(id):
-#     pass
+@app.route('/categories', methods=['POST'])
+@login_required
+def create_category():
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
 
-# TODO: POST /books  (admin only)
-# @app.route("/books", methods=["POST"])
-# @login_required
-# def create_book():
-#     pass
+    data = request.get_json() or {}
+    if not data.get('name'):
+        return jsonify({"message": "Category name is required"}), 400
 
-# TODO: PATCH /books/<id>  (admin only)
-# @app.route("/books/<int:id>", methods=["PATCH"])
-# @login_required
-# def update_book(id):
-#     pass
+    existing = Category.query.filter_by(name=data['name']).first()
+    if existing:
+        return jsonify({"message": "Category name already exists"}), 400
 
-# TODO: DELETE /books/<id>  (admin only)
-# @app.route("/books/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_book(id):
-#     pass
+    new_category = Category(name=data['name'], description=data.get('description', ''))
+    db.session.add(new_category)
+    db.session.commit()
+    return jsonify(category_schema.dump(new_category)), 201
 
-# TODO: GET /authors
-# @app.route("/authors", methods=["GET"])
-# def get_authors():
-#     pass
+@app.route('/categories/<int:category_id>', methods=['PATCH'])
+@login_required
+def update_category(category_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
 
-# TODO: POST /authors  (admin only)
-# @app.route("/authors", methods=["POST"])
-# @login_required
-# def create_author():
-#     pass
+    category = Category.query.get_or_404(category_id, description="Category not found")
+    data = request.get_json() or {}
 
-# TODO: PATCH /authors/<id>  (admin only)
-# @app.route("/authors/<int:id>", methods=["PATCH"])
-# @login_required
-# def update_author(id):
-#     pass
+    if 'name' in data:
+        category.name = data['name']
+    if 'description' in data:
+        category.description = data['description']
 
-# TODO: DELETE /authors/<id>  (admin only)
-# @app.route("/authors/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_author(id):
-#     pass
+    db.session.commit()
+    return jsonify(category_schema.dump(category)), 200
 
-# TODO: GET /categories
-# @app.route("/categories", methods=["GET"])
-# def get_categories():
-#     pass
+@app.route('/categories/<int:category_id>', methods=['DELETE'])
+@login_required
+def delete_category(category_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
 
-# TODO: POST /categories  (admin only)
-# @app.route("/categories", methods=["POST"])
-# @login_required
-# def create_category():
-#     pass
+    category = Category.query.get_or_404(category_id, description="Category not found")
+    if category.books:
+        return jsonify({"message": "Cannot delete category associated with existing books"}), 400
 
-# TODO: PATCH /categories/<id>  (admin only)
-# @app.route("/categories/<int:id>", methods=["PATCH"])
-# @login_required
-# def update_category(id):
-#     pass
+    db.session.delete(category)
+    db.session.commit()
+    return jsonify({"message": f"Category '{category.name}' deleted successfully"}), 200
 
-# TODO: DELETE /categories/<id>  (admin only)
-# @app.route("/categories/<int:id>", methods=["DELETE"])
-# @login_required
-# def delete_category(id):
-#     pass
+
+# ==========================================
+# 3. BOOK ROUTES (Includes Search & Filtering)
+# ==========================================
+
+@app.route('/books', methods=['GET'])
+def get_books():
+    query = Book.query
+
+    search = request.args.get('search')
+    author_id = request.args.get('author_id')
+    category_id = request.args.get('category_id')
+
+    if search:
+        query = query.filter(Book.title.ilike(f"%{search}%"))
+    if author_id:
+        query = query.filter_by(author_id=author_id)
+    if category_id:
+        query = query.filter_by(category_id=category_id)
+
+    books = query.all()
+    return jsonify(books_schema.dump(books)), 200
+
+@app.route('/books/<int:book_id>', methods=['GET'])
+def get_book(book_id):
+    book = Book.query.get_or_404(book_id, description="Book not found")
+    return jsonify(book_schema.dump(book)), 200
+
+@app.route('/books', methods=['POST'])
+@login_required
+def create_book():
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    data = request.get_json() or {}
+    required_fields = ['title', 'isbn', 'author_id', 'category_id']
+
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"message": f"Missing required field: {field}"}), 400
+
+    total_copies = data.get('copies', 1)
+
+    new_book = Book(
+        title=data['title'],
+        isbn=data['isbn'],
+        description=data.get('description', ''),
+        published_year=data.get('published_year'),
+        copies=total_copies,
+        available_copies=data.get('available_copies', total_copies),
+        author_id=data['author_id'],
+        category_id=data['category_id']
+    )
+
+    db.session.add(new_book)
+    db.session.commit()
+    return jsonify(book_schema.dump(new_book)), 201
+
+@app.route('/books/<int:book_id>', methods=['PATCH'])
+@login_required
+def update_book(book_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    book = Book.query.get_or_404(book_id, description="Book not found")
+    data = request.get_json() or {}
+
+    for key in ['title', 'isbn', 'description', 'published_year', 'copies', 'available_copies', 'author_id', 'category_id']:
+        if key in data:
+            setattr(book, key, data[key])
+
+    db.session.commit()
+    return jsonify(book_schema.dump(book)), 200
+
+@app.route('/books/<int:book_id>', methods=['DELETE'])
+@login_required
+def delete_book(book_id):
+    if not is_admin():
+        return jsonify({"message": "Admin privileges required"}), 403
+
+    book = Book.query.get_or_404(book_id, description="Book not found")
+    db.session.delete(book)
+    db.session.commit()
+    return jsonify({"message": f"Book '{book.title}' deleted successfully"}), 200
+
+
+
 
 
 # NASRA — Borrowing System
