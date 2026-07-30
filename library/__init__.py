@@ -18,6 +18,7 @@ login_manager.init_app(app)
 ma.init_app(app)
 
 from .models import User
+from .seed import seed_if_empty
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -27,3 +28,4 @@ from . import routes
 
 with app.app_context():
     db.create_all()
+    seed_if_empty()

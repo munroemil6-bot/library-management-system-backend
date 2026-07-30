@@ -4,6 +4,14 @@ from .models import User, Book, BorrowRecord, Author, Category
 from . import app
 
 
+def seed_if_empty():
+    with app.app_context():
+        if Book.query.count() > 0 or Author.query.count() > 0 or Category.query.count() > 0:
+            return False
+        seed()
+        return True
+
+
 def seed():
     # MASON — Seed sample users (admin + members)
     users_data = [
