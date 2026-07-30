@@ -99,8 +99,39 @@ def delete_user(id):
 
 
 # NAOMI — Library Management
+# =============================================================
+from flask import Blueprint, request, jsonify
+from flask_login import login_required, current_user
+from app import db
+from app.models.author import Author
+from app.schemas.catalog_schema import author_schema, authors_schema
 
-# TODO: GET /books
+# Blueprint Definition
+catalog_bp = Blueprint('catalog', __name__, url_prefix='/api')
+
+# Helper function to restrict write access to Admins
+def admin_required():
+    return getattr(current_user, 'role', None) == 'admin'
+
+
+# ==========================================
+# AUTHOR ROUTES
+# ==========================================
+
+# 1. GET ALL AUTHORS / GET SINGLE AUTHOR
+@catalog_bp.route('/authors', methods=['GET'])
+def get_authors():
+    authors = Author.query.all()
+    return jsonify(authors_schema.dump(authors)), 200
+
+
+@catalog_bp.route('/authors/<int:author_id>', methods=['GET'])
+def get_author(author_id):
+    author = Author.query.get_or_404(author_id, description="Author not found")
+    return jsonify(author_schema.dump(author)), 200
+
+
+#
 # @app.route("/books", methods=["GET"])
 # def get_books():
 #     pass
