@@ -20,12 +20,12 @@ class RegisterSchema(ma.Schema):
     password_confirmation = fields.String(required=True, load_only=True)
 
     @validates("username")
-    def validate_username_unique(self, value):
+    def validate_username_unique(self, value, **kwargs):
         if User.query.filter_by(username=value).first():
             raise ValidationError("Username already taken.")
 
     @validates("email")
-    def validate_email_unique(self, value):
+    def validate_email_unique(self, value, **kwargs):
         if User.query.filter_by(email=value).first():
             raise ValidationError("Email already registered.")
 

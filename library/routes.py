@@ -55,7 +55,7 @@ def health_check():
 @app.route("/api/register", methods=["POST"])
 def register():
     try:
-        data = register_schema.validate(request.get_json())
+        data = register_schema.load(request.get_json())
     except ValidationError as e:
         return jsonify(e.messages), 422
     user = User(
