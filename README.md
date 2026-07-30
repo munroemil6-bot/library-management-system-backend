@@ -6,6 +6,9 @@ The Smart Library Management System is a Flask REST API designed to manage libra
 
 This project is being developed as a group project to demonstrate backend development using Flask and RESTful API principles.
 
+
+
+
 ---
 
 ## Current Progress
@@ -265,7 +268,7 @@ Future enhancements include:
 | Myles Munroe | Project Manager, Authentication, Database Design, Backend Integration, Docker |
 | Mason | User Authentication and User Management |
 | Naomi | Books, Authors and Categories |
-| Nassra | Borrowing System and API Testing |
+| Nasra | Borrowing System and API Testing |
 
 ---
 
