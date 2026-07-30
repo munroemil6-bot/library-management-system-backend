@@ -4,9 +4,7 @@ from .models import User, Book, BorrowRecord
 
 
 def seed():
-    # ==========================================================
     # MASON — Seed sample users (admin + members)
-    # ==========================================================
     if not User.query.first():
         users = [
             User(
@@ -34,9 +32,9 @@ def seed():
     # NAOMI — Seed sample authors, categories, books
     # ==========================================================
 
-    # ==========================================================
+
+
     # NASRA — Seed sample borrow records
-    # ==========================================================
     user = User.query.filter_by(username="testuser").first()
     book = Book.query.filter_by(isbn="1234567890").first()
 
