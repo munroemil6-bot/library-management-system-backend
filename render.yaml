@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: library-management-backend
+    env: docker
+    region: virginia
+    plan: free
+    branch: Myles
+    dockerfilePath: ./Dockerfile
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: FLASK_APP
+        value: run.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: change-me-in-render
+      - key: DATABASE_URI
+        value: sqlite:///instance/library.db

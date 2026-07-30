@@ -46,6 +46,11 @@ def api_index():
     }), 200
 
 
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok"}), 200
+
+
 # MASON — Authentication & Users
 @app.route("/api/register", methods=["POST"])
 def register():
