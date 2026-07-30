@@ -121,17 +121,6 @@ def admin_required():
 # ==========================================
 
 # 1. GET ALL AUTHORS / GET SINGLE AUTHOR
-@catalog_bp.route('/authors', methods=['GET'])
-def get_authors():
-    authors = Author.query.all()
-    return jsonify(authors_schema.dump(authors)), 200
-
-
-@catalog_bp.route('/authors/<int:author_id>', methods=['GET'])
-def get_author(author_id):
-    author = Author.query.get_or_404(author_id, description="Author not found")
-    return jsonify(author_schema.dump(author)), 200
-
 
 #
 # @app.route("/books", methods=["GET"])
