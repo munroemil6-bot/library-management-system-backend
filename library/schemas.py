@@ -1,13 +1,10 @@
 from .extensions import ma
 from .models import User, BorrowRecord
-from marshmallow import fields, validate, validates, ValidationError
+from marshmallow import fields, validate, validates, ValidationError, validates_schema
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from .models import Author, Category, Book # Import your SQLAlchemy models
 
-# =============================================================
 # MASON — Authentication & Users
-# =============================================================
-
 class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
@@ -84,9 +81,7 @@ class BookSchema(SQLAlchemyAutoSchema):
     author = fields.Nested(AuthorSchema, only=("id", "name"), dump_only=True)
     category = fields.Nested(CategorySchema, only=("id", "name"), dump_only=True)
 
-# =============================================================
 # NASRA — Borrowing System
-# =============================================================
 class BorrowSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = BorrowRecord

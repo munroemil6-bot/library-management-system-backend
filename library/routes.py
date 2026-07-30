@@ -3,19 +3,18 @@ from flask_login import login_required, login_user, logout_user, current_user
 from marshmallow import ValidationError
 from . import app
 from .extensions import db, bcrypt
-from .models import User
-from .schemas import UserSchema, RegisterSchema, LoginSchema
+from .models import User,  Book, BorrowRecord
+from .schemas import UserSchema, RegisterSchema, LoginSchema, BorrowSchema
+from datetime import datetime, timedelta
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 register_schema = RegisterSchema()
 login_schema = LoginSchema()
+borrow_schema = BorrowSchema()
 
 
-# =============================================================
 # MASON — Authentication & Users
-# =============================================================
-
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -99,7 +98,6 @@ def delete_user(id):
     return jsonify({"message": "User deleted."}), 200
 
 
-# =============================================================
 # NAOMI — Library Management
 # =============================================================
 from flask import Blueprint, request, jsonify
@@ -208,9 +206,7 @@ def get_author(author_id):
 #     pass
 
 
-# =============================================================
 # NASRA — Borrowing System
-# =============================================================
 @app.route("/borrow", methods=["GET"])
 @login_required
 def get_borrow_records():
@@ -266,7 +262,7 @@ def return_book(id):
 
     if record.user_id != current_user.id and current_user.role != "admin":
         return jsonify(
-          {"error": "You are not authorized to update this record."}), 403
+        {"error": "You are not authorized to update this record."}), 403
 
     if record.status == "returned":
         return jsonify({"error": "This book has already been returned."}), 400
@@ -286,7 +282,7 @@ def return_book(id):
 def delete_borrow_record(id):
     if current_user.role != "admin":
         return jsonify(
-          {"error": "Only admins can delete borrow records."}), 403
+        {"error": "Only admins can delete borrow records."}), 403
 
     record = BorrowRecord.query.get(id)
     if not record:
